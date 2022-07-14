@@ -3,9 +3,9 @@ let completedList = document.getElementById('completedTasks');
 let form = document.querySelector('form');
 let taskClone = document.querySelector('.list-group-item').cloneNode(true);
 
-let completeButtons = document.querySelectorAll('.btn-success');
-let editButtons = document.querySelectorAll('.btn-info');
-let deleteButtons = document.querySelectorAll('.btn-danger');
+let completeButtons = document.getElementsByClassName('btn-success');
+let editButtons = document.getElementsByClassName('btn-info');
+let deleteButtons = document.getElementsByClassName('btn-danger');
 
 let inputTitle = document.getElementById('inputTitle');
 let inputText = document.getElementById('inputText');
@@ -19,17 +19,14 @@ for (item of deleteButtons) {
     item.addEventListener('click', deleteTask);
 }
 
-for (item of editButtons) {
-    item.addEventListener('click', editTask);
-}
-
 form.addEventListener('submit', addTask);
 
 function completeTask(event) {
     let task = event.target.closest('.list-group-item');
-    let btn = event.target.closest(".dropdown");
+    let dropDown = event.target.closest(".dropdown");
 
-    btn.style.display = 'none';
+    dropDown.querySelector('.btn-success').style.display = 'none';
+    dropDown.querySelector('.btn-info').style.display = 'none';
 
     completedList.append(task);
 }
@@ -49,8 +46,14 @@ function addTask(event) {
     let title = task.querySelector('.mb-1');
     title.textContent = inputTitle.value;
     
-    let text = task.querySelector('.mr-2');
+    let text = task.querySelector('p');
     text.textContent = inputText.value;
 
+    inputTitle.value = '';
+    inputText.value = '';
+
     todoList.append(task);
+
+    $("#exampleModal").modal("hide");
+
 }
