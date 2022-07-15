@@ -12,6 +12,34 @@
         margin: 15px auto 0;
     }
 
+    #mode {
+        text-align: center;
+        display: flex;
+        justify-content: space-around;
+    }
+
+    #night {
+        width: 80px;
+        height: 40px;
+    }
+
+    .night-body {
+        background-color: rgb(50, 50, 50);
+        color: white;
+    }
+
+    .night-li {
+        color: black;
+    }
+
+    .night-modal {
+        color: black;
+    }
+
+    .night-nav {
+        background-color: rgb(70, 70, 70);
+    }
+
     </style>
     <title>Task Tracker</title>
 </head>
@@ -33,7 +61,10 @@
                         <i class="fas fa-cog"></i>
                     </button>
                     <div class="dropdown-menu p-2 dropdown-menu-right" aria-labelledby="dropdownMenuSettings">
-                        You should add settings here
+                        <p align = "center">Nigth mode</p>
+                        <div id="mode">
+                            <button id="night">On</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -67,7 +98,7 @@
                     </li>
                 </ul>
                 <hr>
-                <h3 class="my-2">Comleted</h3>
+                <h3 class="my-2">Completed</h3>
                 <ul class="list-group flex-wrap justify-content-between" id="completedTasks">
                 </ul>
             </div>

@@ -10,7 +10,8 @@ let taskToEdit;
 let taskCounter = todoList.getElementsByClassName('list-group-item').length;
 let completeCounter = completedList.getElementsByClassName('list-group-item').length;
 
-
+todoList.previousElementSibling.innerHTML += " (" + taskCounter + ")";
+completedList.previousElementSibling.innerHTML += " (" + completeCounter + ")";
 
 let inputTitle = document.getElementById('inputTitle');
 let inputText = document.getElementById('inputText');
@@ -20,18 +21,20 @@ let button = document.getElementById('add');
 
 let sortNewButton = document.getElementById('sortNew');
 let sotrOldButton = document.getElementById('sortOld');
+let nightButton = document.getElementById('night');
 
 todoList.addEventListener('click', completeTask);
-
 todoList.addEventListener('click', editTask);
-
-completedList.addEventListener('click', deleteTask); 
 todoList.addEventListener('click', deleteTask);
 
-form.addEventListener('submit', formSubmit);
+completedList.addEventListener('click', deleteTask); 
+
+form.addEventListener('submit', submitForm);
 
 sortNewButton.addEventListener('click', sortNew);
 sotrOldButton.addEventListener('click', sortOld);
+
+nightButton.addEventListener('click', activateNightMode);
 
 function completeTask(event) {
 
@@ -41,6 +44,9 @@ function completeTask(event) {
 
         dropDown.querySelector('.btn-success').style.display = 'none';
         dropDown.querySelector('.btn-info').style.display = 'none';
+
+        todoList.previousElementSibling.innerHTML = "ToDo (" + --taskCounter + ")";
+        completedList.previousElementSibling.innerHTML = "Completed (" + ++completeCounter + ")";
 
         completedList.append(task);
     }
@@ -63,11 +69,18 @@ function deleteTask(event) {
     if (event.target.classList.contains('btn-danger')) {
         let task = event.target.closest('li');
 
+        if (event.target.closest('#currentTasks')) {
+            todoList.previousElementSibling.innerHTML = "ToDo (" + --taskCounter + ")";
+        } else {
+            completedList.previousElementSibling.innerHTML = "Completed (" + --completeCounter + ")";
+        }
+        
+
         task.remove();
     }
 }
 
-function formSubmit(event) {
+function submitForm(event) {
 
     event.preventDefault();
 
@@ -76,6 +89,7 @@ function formSubmit(event) {
     if (button.textContent == "Add task") {
         task.innerHTML = taskClone.innerHTML;
         task.classList = "list-group-item d-flex w-100 mb-2";
+        todoList.previousElementSibling.innerHTML = "ToDo (" + ++taskCounter + ")";
     }
 
     task.innerHTML = taskClone.innerHTML;
@@ -98,6 +112,8 @@ function formSubmit(event) {
 
     let date = new Date();
 
+    //Components of date calculation
+
     let day = (date.getDate() < 10) ? ("0" + date.getDate()) : date.getDate();
     let month = ((date.getMonth() + 1) < 10) ? ("0" + (date.getMonth() + 1)) : (date.getMonth() + 1);
     let minutes = ((date.getMinutes()) < 10) ? ("0" + date.getMinutes()) : date.getMinutes();
@@ -113,7 +129,7 @@ function formSubmit(event) {
     task.style.backgroundColor = inputColor.value;
 
     
-    //Color "darkness" checking
+    //"Darkness" of the color calculation
     if (parseInt(inputColor.value.slice(1), 16) < 8e6) {
         task.style.color = "#ffffff";
     }
@@ -159,4 +175,21 @@ function sortOld(event) {
     for (let task of tasks) {
         todoList.append(task);
     }
+}
+
+function activateNightMode(event) {
+    
+    if (nightButton.textContent == "On") {
+        nightButton.textContent = "Off";
+    } else {
+        nightButton.textContent = "On";
+    }
+
+    document.body.classList.toggle('night-body');
+    document.querySelectorAll('li').forEach(item => {
+        item.classList.toggle('night-li');
+    });
+    document.querySelector('.modal').classList.toggle('night-modal');
+    document.querySelector('.navbar').classList.toggle('bg-light');
+    document.querySelector('.navbar').classList.toggle('night-nav');
 }
