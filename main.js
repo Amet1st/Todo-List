@@ -1,12 +1,17 @@
 let todoList = document.getElementById('currentTasks');
 let completedList = document.getElementById('completedTasks');
 let form = document.querySelector('form');
-let taskClone = document.querySelector('.list-group-item').cloneNode(true);
+let firstTask = document.querySelector('.list-group-item');
+let taskClone = firstTask.cloneNode(true);
+
+firstTask.timeOfAdd = 0;
 
 let inputTitle = document.getElementById('inputTitle');
 let inputText = document.getElementById('inputText');
 let priorityInputs = document.querySelectorAll('input[type="radio"]');
 
+let sortNewButton = document.getElementById('sortNew');
+let sotrOldButton = document.getElementById('sortOld');
 
 todoList.addEventListener('click', completeTask);
 
@@ -16,6 +21,9 @@ completedList.addEventListener('click', deleteTask);
 todoList.addEventListener('click', deleteTask);
 
 form.addEventListener('submit', addTask);
+
+sortNewButton.addEventListener('click', sortNew);
+sotrOldButton.addEventListener('click', sortOld);
 
 function completeTask(event) {
 
@@ -93,4 +101,24 @@ function addTask(event) {
 
     $("#exampleModal").modal("hide");
 
+}
+
+function sortNew(event) {
+    let tasks = Array.from(todoList.querySelectorAll('.list-group-item'));
+
+    tasks.sort((a, b) => b.timeOfAdd - a.timeOfAdd);
+
+    for (let task of tasks) {
+        todoList.append(task);
+    }
+}
+
+function sortOld(event) {
+    let tasks = Array.from(todoList.querySelectorAll('.list-group-item'));
+
+    tasks.sort((a, b) => a.timeOfAdd - b.timeOfAdd);
+
+    for (let task of tasks) {
+        todoList.append(task);
+    }
 }
