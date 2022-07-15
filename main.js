@@ -5,11 +5,18 @@ let firstTask = document.querySelector('.list-group-item');
 let taskClone = firstTask.cloneNode(true);
 
 firstTask.timeOfAdd = 0;
+let taskToEdit;
+
+let taskCounter = todoList.getElementsByClassName('list-group-item').length;
+let completeCounter = completedList.getElementsByClassName('list-group-item').length;
+
+
 
 let inputTitle = document.getElementById('inputTitle');
 let inputText = document.getElementById('inputText');
 let priorityInputs = document.querySelectorAll('input[type="radio"]');
 let inputColor = document.getElementById('inputColor');
+let button = document.getElementById('add');
 
 let sortNewButton = document.getElementById('sortNew');
 let sotrOldButton = document.getElementById('sortOld');
@@ -21,7 +28,7 @@ todoList.addEventListener('click', editTask);
 completedList.addEventListener('click', deleteTask); 
 todoList.addEventListener('click', deleteTask);
 
-form.addEventListener('submit', addTask);
+form.addEventListener('submit', formSubmit);
 
 sortNewButton.addEventListener('click', sortNew);
 sotrOldButton.addEventListener('click', sortOld);
@@ -41,7 +48,13 @@ function completeTask(event) {
 
 function editTask(event) {
     if (event.target.classList.contains('btn-info')) {
-        $('#myModal').modal('show');
+        $("#exampleModal").modal("show");
+
+        taskToEdit = event.target.closest('li');
+
+        console.log(taskToEdit);
+
+        button.textContent = "Edit";
     }
 }
 
@@ -54,11 +67,17 @@ function deleteTask(event) {
     }
 }
 
-function addTask(event) {
+function formSubmit(event) {
 
     event.preventDefault();
 
-    let task = document.createElement('li');
+    let task = (button.textContent == "Add task") ? document.createElement('li') : taskToEdit;
+
+    if (button.textContent == "Add task") {
+        task.innerHTML = taskClone.innerHTML;
+        task.classList = "list-group-item d-flex w-100 mb-2";
+    }
+
     task.innerHTML = taskClone.innerHTML;
     task.classList = "list-group-item d-flex w-100 mb-2";
 
@@ -93,9 +112,13 @@ function addTask(event) {
 
     task.style.backgroundColor = inputColor.value;
 
+    
+    //Color "darkness" checking
     if (parseInt(inputColor.value.slice(1), 16) < 8e6) {
         task.style.color = "#ffffff";
     }
+
+    //Set inputs to default values
 
     inputTitle.value = '';
     inputText.value = '';
@@ -105,11 +128,18 @@ function addTask(event) {
         item.checked = false;
     }
 
-    todoList.insertAdjacentElement("beforeend", task);
+    if (button.textContent == "Add task") {
+        todoList.insertAdjacentElement("beforeend", task);
+    }
+    
+    if (button.textContent == "Edit") {
+        button.textContent = "Add task";
+    }
 
     $("#exampleModal").modal("hide");
 
 }
+
 
 function sortNew(event) {
     let tasks = Array.from(todoList.querySelectorAll('.list-group-item'));
