@@ -9,6 +9,7 @@ firstTask.timeOfAdd = 0;
 let inputTitle = document.getElementById('inputTitle');
 let inputText = document.getElementById('inputText');
 let priorityInputs = document.querySelectorAll('input[type="radio"]');
+let inputColor = document.getElementById('inputColor');
 
 let sortNewButton = document.getElementById('sortNew');
 let sotrOldButton = document.getElementById('sortOld');
@@ -90,8 +91,15 @@ function addTask(event) {
     let dateElement = task.querySelector('.date');
     dateElement.textContent = time;
 
+    task.style.backgroundColor = inputColor.value;
+
+    if (parseInt(inputColor.value.slice(1), 16) < 8e6) {
+        task.style.color = "#ffffff";
+    }
+
     inputTitle.value = '';
     inputText.value = '';
+    inputColor.value = "#ffffff";
     
     for (item of priorityInputs) {
         item.checked = false;
