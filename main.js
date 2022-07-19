@@ -190,8 +190,6 @@ function getTasks() {
     let keys = Object.keys(localStorage);
     keys.reverse();
 
-    console.log(localStorage);
-
     for (let key of keys) {
 
         if (key.startsWith('_')) {
