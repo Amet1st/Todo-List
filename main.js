@@ -190,18 +190,23 @@ function getTasks() {
     let keys = Object.keys(localStorage);
     keys.reverse();
 
+    console.log(localStorage);
+
     for (let key of keys) {
 
-        let task = createElementFromHTML(localStorage[key]);
+        if (key.startsWith('_')) {
+            let task = createElementFromHTML(localStorage[key]);
 
-        task.querySelector('.dropdown').classList.remove('show');
-        task.querySelector('.dropdown-menu').classList.remove('show');
+            task.querySelector('.dropdown').classList.remove('show');
+            task.querySelector('.dropdown-menu').classList.remove('show');
 
-        if (task.dataset.isDone == "true") {
-            completedList.insertAdjacentHTML('beforeend', task.outerHTML);
-        } else {
-            todoList.insertAdjacentHTML('beforeend', task.outerHTML);
+            if (task.dataset.isDone == "true") {
+                completedList.insertAdjacentHTML('beforeend', task.outerHTML);
+            } else {
+                todoList.insertAdjacentHTML('beforeend', task.outerHTML);
+            }
         }
+        
     }
 }
 
