@@ -3,22 +3,22 @@ let completedList = document.getElementById('completedTasks');
 let form = document.querySelector('form');
 
 let taskToEdit;
-
-let taskCounter = todoList.getElementsByClassName('list-group-item').length;
-let completeCounter = completedList.getElementsByClassName('list-group-item').length;
-
-todoList.previousElementSibling.innerHTML += " (" + taskCounter + ")";
-completedList.previousElementSibling.innerHTML += " (" + completeCounter + ")";
+let taskCounter;
+let completeCounter;
 
 let inputTitle = document.getElementById('inputTitle');
 let inputText = document.getElementById('inputText');
 let priorityInputs = document.querySelectorAll('input[type="radio"]');
 let inputColor = document.getElementById('inputColor');
-let button = document.getElementById('add');
 
+let submitButton = document.getElementById('add');
 let sortNewButton = document.getElementById('sortNew');
 let sotrOldButton = document.getElementById('sortOld');
 let nightButton = document.getElementById('night');
+
+document.addEventListener('DOMContentLoaded', getTasks);
+document.addEventListener('DOMContentLoaded', showCounters);
+document.addEventListener('DOMContentLoaded', getNightMode);
 
 todoList.addEventListener('click', completeTask);
 todoList.addEventListener('click', editTask);
@@ -31,7 +31,6 @@ form.addEventListener('submit', submitFormAdd);
 
 sortNewButton.addEventListener('click', sortNew);
 sotrOldButton.addEventListener('click', sortOld);
-
 nightButton.addEventListener('click', activateNightMode);
 
 function completeTask(event) {
@@ -39,13 +38,16 @@ function completeTask(event) {
     if (event.target.classList.contains('btn-success')) {
 
         let task = event.target.closest('li');
-        let dropDown = event.target.closest(".dropdown");
 
-        dropDown.querySelector('.btn-success').style.display = 'none';
-        dropDown.querySelector('.btn-info').style.display = 'none';
+        task.querySelector('.btn-success').style.display = 'none';
+        task.querySelector('.btn-info').style.display = 'none';
 
         todoList.previousElementSibling.innerHTML = "ToDo (" + --taskCounter + ")";
         completedList.previousElementSibling.innerHTML = "Completed (" + ++completeCounter + ")";
+
+        task.dataset.isDone = "true";
+
+        localStorage.setItem(task.dataset.id, task.outerHTML);
 
         completedList.append(task);
     }
@@ -58,7 +60,7 @@ function editTask(event) {
 
         taskToEdit = event.target.closest('li');
 
-        button.textContent = "Edit";
+        submitButton.textContent = "Edit";
     }
 }
 
@@ -74,6 +76,7 @@ function deleteTask(event) {
             completedList.previousElementSibling.innerHTML = "Completed (" + --completeCounter + ")";
         }
         
+        localStorage.removeItem(task.dataset.id);
 
         task.remove();
     }
@@ -83,7 +86,7 @@ function submitFormEdit(event) {
 
     event.preventDefault();
 
-    if (button.textContent === "Edit") {
+    if (submitButton.textContent === "Edit") {
         
         let task = taskToEdit;
 
@@ -108,26 +111,22 @@ function submitFormEdit(event) {
         dateElement.textContent = time;
 
         task.style.backgroundColor = inputColor.value;
+        task.style.color = getFontColor(inputColor.value);
 
-        //"Darkness" of the color calculation
-        if (parseInt(inputColor.value.slice(1), 16) < 8e6) {
-            task.style.color = "#ffffff";
-        }
+        localStorage.setItem(task.dataset.id, task.outerHTML);
 
         setInputsToEmpty();
 
         $("#exampleModal").modal("hide");
 
     }
-
-   
 }
 
 function submitFormAdd(event) {
 
     event.preventDefault();
 
-    if (button.textContent == "Add task") {
+    if (submitButton.textContent == "Add task") {
 
         todoList.previousElementSibling.innerHTML = "ToDo (" + ++taskCounter + ")";
 
@@ -142,72 +141,109 @@ function submitFormAdd(event) {
         }
         
         let time = getDateOfAdd();
+        let timeOfAdd = (new Date()).getTime();
 
-        let taskHTML = `<div class="w-100 mr-2">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">${title}</h5>
-                                <div>
-                                    <small class="mr-2">${priority} priority</small>
-                                    <small class="date">${time}</small>
+        let taskID = generateId();
+
+        let color = inputColor.value;
+        let fontColor = getFontColor(color);
+
+        let taskHTML = `<li class="list-group-item d-flex w-100 mb-2" data-id ="${taskID}" data-time="${timeOfAdd}" data-is-done="false" style="background-color:${color}; color: ${fontColor}">
+                            <div class="w-100 mr-2">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">${title}</h5>
+                                    <div>
+                                        <small class="mr-2">${priority} priority</small>
+                                        <small class="date">${time}</small>
+                                    </div>
+
                                 </div>
-
+                                <p class="mb-1 w-100">${text}</p>
                             </div>
-                            <p class="mb-1 w-100">${text}</p>
-                        </div>
-                        <div class="dropdown m-2 dropleft">
-                            <button class="btn btn-secondary h-100" type="button" id="dropdownMenuItem1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <div class="dropdown-menu p-2 flex-column" aria-labelledby="dropdownMenuItem1">
-                                <button type="button" class="btn btn-success w-100">Complete</button>
-                                <button type="button" class="btn btn-info w-100 my-2">Edit</button>
-                                <button type="button" class="btn btn-danger w-100">Delete</button>
+                            <div class="dropdown m-2 dropleft">
+                                <button class="btn btn-secondary h-100" type="button" id="dropdownMenuItem1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="dropdown-menu p-2 flex-column" aria-labelledby="dropdownMenuItem1">
+                                    <button type="button" class="btn btn-success w-100">Complete</button>
+                                    <button type="button" class="btn btn-info w-100 my-2">Edit</button>
+                                    <button type="button" class="btn btn-danger w-100">Delete</button>
+                                </div>
                             </div>
-                        </div>`
-
-        task = document.createElement('li');
-        task.className = "list-group-item d-flex w-100 mb-2";
-        task.innerHTML = taskHTML;
-
-        task.style.backgroundColor = inputColor.value;
-
-        //"Darkness" of the color calculation
-        if (parseInt(inputColor.value.slice(1), 16) < 8e6) {
-            task.style.color = "#ffffff";
-        }
+                        </li>`
 
         setInputsToEmpty();
 
-        let timeOfAdd = (new Date()).getTime();
-        task.timeOfAdd = timeOfAdd;
+        todoList.insertAdjacentHTML('beforeend', taskHTML);
 
-        todoList.append(task);
+        localStorage.setItem(taskID, taskHTML);
 
         $("#exampleModal").modal("hide");
     }
 
-    button.textContent = "Add task";
+    submitButton.textContent = "Add task";
 
 }
 
+function getTasks() {
+
+    let keys = Object.keys(localStorage);
+    keys.reverse();
+
+    for (let key of keys) {
+
+        let task = createElementFromHTML(localStorage[key]);
+
+        task.querySelector('.dropdown').classList.remove('show');
+        task.querySelector('.dropdown-menu').classList.remove('show');
+
+        if (task.dataset.isDone == "true") {
+            completedList.insertAdjacentHTML('beforeend', task.outerHTML);
+        } else {
+            todoList.insertAdjacentHTML('beforeend', task.outerHTML);
+        }
+    }
+}
+
+function createElementFromHTML(html) {
+
+    let div = document.createElement('div');
+    
+    div.innerHTML = html.trim();
+ 
+    return div.firstChild;
+}
 
 function sortNew(event) {
-    let tasks = Array.from(todoList.querySelectorAll('.list-group-item'));
+    let tasksToDo = Array.from(todoList.querySelectorAll('li'));
+    let tasksComplete = Array.from(completedList.querySelectorAll('li'));
 
-    tasks.sort((a, b) => b.timeOfAdd - a.timeOfAdd);
+    tasksToDo.sort((a, b) => b.dataset.time - a.dataset.time);
+    tasksComplete.sort((a, b) => b.dataset.time - a.dataset.time);
 
-    for (let task of tasks) {
+    for (let task of tasksToDo) {
         todoList.append(task);
+    }
+
+    for (let task of tasksComplete) {
+        completedList.append(task);
     }
 }
 
 function sortOld(event) {
-    let tasks = Array.from(todoList.querySelectorAll('.list-group-item'));
 
-    tasks.sort((a, b) => a.timeOfAdd - b.timeOfAdd);
+    let tasksToDo = Array.from(todoList.querySelectorAll('li'));
+    let tasksComplete = Array.from(completedList.querySelectorAll('li'));
 
-    for (let task of tasks) {
+    tasksToDo.sort((a, b) => a.dataset.time - b.dataset.time);
+    tasksComplete.sort((a, b) => a.dataset.time - b.dataset.time);
+
+    for (let task of tasksToDo) {
         todoList.append(task);
+    }
+
+    for (let task of tasksComplete) {
+        completedList.append(task);
     }
 }
 
@@ -215,8 +251,10 @@ function activateNightMode(event) {
     
     if (nightButton.textContent == "On") {
         nightButton.textContent = "Off";
+        sessionStorage.setItem('night', 'true');
     } else {
         nightButton.textContent = "On";
+        sessionStorage.setItem('night', 'false');
     }
 
     document.body.classList.toggle('night-body');
@@ -228,6 +266,20 @@ function activateNightMode(event) {
     document.querySelector('.navbar').classList.toggle('night-nav');
 }
 
+function getNightMode() {
+    if (sessionStorage.getItem('night') == 'true') {
+        activateNightMode();
+    }
+}
+
+function showCounters() {
+
+    taskCounter = todoList.getElementsByTagName('li').length
+    completeCounter = completedList.getElementsByTagName('li').length;
+
+    todoList.previousElementSibling.innerHTML += " (" + taskCounter + ")";
+    completedList.previousElementSibling.innerHTML += " (" + completeCounter + ")";
+}
 
 function getDateOfAdd() {
 
@@ -250,6 +302,19 @@ function setInputsToEmpty() {
     
     for (item of priorityInputs) {
         item.checked = false;
+    }
+}
+
+ function generateId() {
+    return "_" + Math.random().toString(36).substr(2, 9);
+}
+
+function getFontColor(color) {
+
+    if (parseInt(color.slice(1), 16) < 8e6) {
+        return "#ffffff";
+    } else {
+        return "#000000";
     }
 }
 
