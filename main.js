@@ -15,6 +15,7 @@ let submitButton = document.getElementById('add');
 let sortNewButton = document.getElementById('sortNew');
 let sotrOldButton = document.getElementById('sortOld');
 let nightButton = document.getElementById('night');
+let editLabel = document.getElementById('exampleModalLabel');
 
 document.addEventListener('DOMContentLoaded', getTasks);
 document.addEventListener('DOMContentLoaded', showCounters);
@@ -62,7 +63,19 @@ function editTask(event) {
 
         taskToEdit = event.target.closest('li');
 
-        submitButton.textContent = "Edit";
+        let title = taskToEdit.querySelector('.mb-1').textContent;
+        let text = taskToEdit.querySelector('p').textContent;
+        let priorityItem = taskToEdit.querySelector('small').textContent;
+        let priority = getPriority(priorityItem);
+
+        let color = rgb2hex(taskToEdit.style.backgroundColor);
+
+        fillEditForm(title, text, priority, color);
+
+        submitButton.textContent = "Edit task";
+
+        editLabel.textContent = "Edit task";
+        
     }
 }
 
@@ -88,7 +101,7 @@ function submitFormEdit(event) {
 
     event.preventDefault();
 
-    if (submitButton.textContent === "Edit") {
+    if (submitButton.textContent === "Edit task") {
         
         let task = taskToEdit;
 
@@ -187,6 +200,8 @@ function submitFormAdd(event) {
     }
 
     submitButton.textContent = "Add task";
+
+    editLabel.textContent = "Add task";
 
 }
 
@@ -347,6 +362,22 @@ function createTaskHTML(taskID, title, text, priority, time, timeOfAdd, color, f
     return taskHTML;
 }
 
+function fillEditForm(title, text, priority, color) {
+
+    inputTitle.value = title;
+    inputText.value = text;
+
+    for (item of priorityInputs) {
+
+        if (item.value == priority) {
+            
+            item.checked = true;
+        }
+    }
+
+    inputColor.value = color;
+}
+
 function setInputsToEmpty() {
 
     inputTitle.value = '';
@@ -371,4 +402,25 @@ function getFontColor(color) {
     }
 }
 
+function getPriority(string) {
+    let priority = "";
 
+    for (let char of string) {
+        if (char == " ") {
+            break
+        } else {
+            priority += char;
+        }
+    }
+
+    return priority;
+}
+
+function rgb2hex(rgb) {
+    var rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+
+    return (rgb && rgb.length === 4) ? "#" +
+        ("0" + parseInt(rgb[1],10).toString(16)).slice(-2) +
+        ("0" + parseInt(rgb[2],10).toString(16)).slice(-2) +
+        ("0" + parseInt(rgb[3],10).toString(16)).slice(-2) : '';
+};
