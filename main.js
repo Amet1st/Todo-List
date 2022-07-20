@@ -45,9 +45,11 @@ function completeTask(event) {
         todoList.previousElementSibling.innerHTML = "ToDo (" + --taskCounter + ")";
         completedList.previousElementSibling.innerHTML = "Completed (" + ++completeCounter + ")";
 
-        task.dataset.isDone = "true";
+        let taskDescription = JSON.parse(localStorage.getItem(task.dataset.id));
 
-        localStorage.setItem(task.dataset.id, task.outerHTML);
+        taskDescription.isDone = true;
+
+        localStorage.setItem(taskDescription.id, JSON.stringify(taskDescription));
 
         completedList.append(task);
     }
@@ -110,10 +112,23 @@ function submitFormEdit(event) {
         let dateElement = task.querySelector('.date');
         dateElement.textContent = time;
 
-        task.style.backgroundColor = inputColor.value;
-        task.style.color = getFontColor(inputColor.value);
+        let color = inputColor.value;
+        task.style.backgroundColor = color;
+        let fontColor = getFontColor(inputColor.value);
+        task.style.color = fontColor;
 
-        localStorage.setItem(task.dataset.id, task.outerHTML);
+        taskDescription = {
+            "id": task.dataset.id,
+            "title": title.textContent,
+            "text": text.textContent,
+            "priority": priority.textContent,
+            "color": color,
+            "time": time,
+            "timeOfAdd": timeOfAdd,
+            "fontColor": fontColor
+        }
+
+        localStorage.setItem(task.dataset.id, JSON.stringify(taskDescription));
 
         setInputsToEmpty();
 
@@ -148,35 +163,25 @@ function submitFormAdd(event) {
         let color = inputColor.value;
         let fontColor = getFontColor(color);
 
-        let taskHTML = `<li class="list-group-item d-flex w-100 mb-2" data-id ="${taskID}" data-time="${timeOfAdd}" data-is-done="false" style="background-color:${color}; color: ${fontColor}">
-                            <div class="w-100 mr-2">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1">${title}</h5>
-                                    <div>
-                                        <small class="mr-2">${priority} priority</small>
-                                        <small class="date">${time}</small>
-                                    </div>
-
-                                </div>
-                                <p class="mb-1 w-100">${text}</p>
-                            </div>
-                            <div class="dropdown m-2 dropleft">
-                                <button class="btn btn-secondary h-100" type="button" id="dropdownMenuItem1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <div class="dropdown-menu p-2 flex-column" aria-labelledby="dropdownMenuItem1">
-                                    <button type="button" class="btn btn-success w-100">Complete</button>
-                                    <button type="button" class="btn btn-info w-100 my-2">Edit</button>
-                                    <button type="button" class="btn btn-danger w-100">Delete</button>
-                                </div>
-                            </div>
-                        </li>`
+        let taskHTML = createTaskHTML(taskID, title, text, priority, time, timeOfAdd, color, fontColor);
 
         setInputsToEmpty();
 
         todoList.insertAdjacentHTML('beforeend', taskHTML);
 
-        localStorage.setItem(taskID, taskHTML);
+        taskDescription = {
+            "id": taskID,
+            "isDone": false,
+            "title": title,
+            "text": text,
+            "priority": priority,
+            "color": color,
+            "time": time,
+            "timeOfAdd": timeOfAdd,
+            "fontColor": fontColor
+        }
+
+        localStorage.setItem(taskID, JSON.stringify(taskDescription));
 
         $("#exampleModal").modal("hide");
     }
@@ -193,15 +198,31 @@ function getTasks() {
     for (let key of keys) {
 
         if (key.startsWith('_')) {
-            let task = createElementFromHTML(localStorage[key]);
+            
+            let taskDescription = JSON.parse(localStorage[key]);
+
+            let taskID = taskDescription.id;
+            let title = taskDescription.title;
+            let text = taskDescription.text;
+            let priority = taskDescription.priority;
+            let color = taskDescription.color;
+            let time = taskDescription.time;
+            let timeOfAdd = taskDescription.timeOfAdd;
+            let fontColor = taskDescription.fontColor;
+
+            let taskHTML = createTaskHTML(taskID, title, text, priority, time, timeOfAdd, color, fontColor);
+            let task = createElementFromHTML(taskHTML);
 
             task.querySelector('.dropdown').classList.remove('show');
             task.querySelector('.dropdown-menu').classList.remove('show');
 
-            if (task.dataset.isDone == "true") {
-                completedList.insertAdjacentHTML('beforeend', task.outerHTML);
+            if (taskDescription.isDone) {
+                task.querySelector('.btn-success').style.display = 'none';
+                task.querySelector('.btn-info').style.display = 'none';
+
+                completedList.append(task);
             } else {
-                todoList.insertAdjacentHTML('beforeend', task.outerHTML);
+                todoList.append(task);
             }
         }
         
@@ -295,6 +316,35 @@ function getDateOfAdd() {
     let time = date.getHours() + ":" + minutes + " " + day + "." + month + "." + date.getFullYear();
 
     return time;
+}
+
+function createTaskHTML(taskID, title, text, priority, time, timeOfAdd, color, fontColor) {
+
+    let taskHTML = `<li class="list-group-item d-flex w-100 mb-2" data-id ="${taskID}" data-time="${timeOfAdd}" style="background-color:${color}; color: ${fontColor}">
+                            <div class="w-100 mr-2">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">${title}</h5>
+                                    <div>
+                                        <small class="mr-2">${priority} priority</small>
+                                        <small class="date">${time}</small>
+                                    </div>
+
+                                </div>
+                                <p class="mb-1 w-100">${text}</p>
+                            </div>
+                            <div class="dropdown m-2 dropleft">
+                                <button class="btn btn-secondary h-100" type="button" id="dropdownMenuItem1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="dropdown-menu p-2 flex-column" aria-labelledby="dropdownMenuItem1">
+                                    <button type="button" class="btn btn-success w-100">Complete</button>
+                                    <button type="button" class="btn btn-info w-100 my-2">Edit</button>
+                                    <button type="button" class="btn btn-danger w-100">Delete</button>
+                                </div>
+                            </div>
+                        </li>`
+    
+    return taskHTML;
 }
 
 function setInputsToEmpty() {
