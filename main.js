@@ -208,7 +208,6 @@ function submitFormAdd(event) {
 function getTasks() {
 
     let keys = Object.keys(localStorage);
-    keys.reverse();
 
     for (let key of keys) {
 
