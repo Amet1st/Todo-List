@@ -1,91 +1,109 @@
-let todoList = document.getElementById('currentTasks');
-let completedList = document.getElementById('completedTasks');
-let form = document.querySelector('form');
+const todoList = document.getElementById('currentTasks');
+const completedList = document.getElementById('completedTasks');
+const form = document.querySelector('form');
+
+const editLabel = document.getElementById('exampleModalLabel');
+const inputTitle = document.getElementById('inputTitle');
+const inputText = document.getElementById('inputText');
+const priorityInputs = document.querySelectorAll('input[type="radio"]');
+const inputColor = document.getElementById('inputColor');
+
+const submitButton = document.getElementById('add');
+const sortNewButton = document.getElementById('sortNew');
+const sotrOldButton = document.getElementById('sortOld');
+const nightButton = document.getElementById('night');
 
 let taskToEdit;
 let taskCounter;
 let completeCounter;
 
-let inputTitle = document.getElementById('inputTitle');
-let inputText = document.getElementById('inputText');
-let priorityInputs = document.querySelectorAll('input[type="radio"]');
-let inputColor = document.getElementById('inputColor');
-
-let submitButton = document.getElementById('add');
-let sortNewButton = document.getElementById('sortNew');
-let sotrOldButton = document.getElementById('sortOld');
-let nightButton = document.getElementById('night');
-let editLabel = document.getElementById('exampleModalLabel');
-
 document.addEventListener('DOMContentLoaded', getTasks);
 document.addEventListener('DOMContentLoaded', showCounters);
 document.addEventListener('DOMContentLoaded', getNightMode);
 
-todoList.addEventListener('click', completeTask);
-todoList.addEventListener('click', editTask);
-todoList.addEventListener('click', deleteTask);
+todoList.addEventListener('click', (event) => {
+    if (event.target.classList.contains('btn-success')) {
+        completeTask(event);
+    }
 
-completedList.addEventListener('click', deleteTask); 
+    if (event.target.classList.contains('btn-info')) {
+        editTask(event);
+    }
 
-form.addEventListener('submit', submitFormEdit);
-form.addEventListener('submit', submitFormAdd);
+    if (event.target.classList.contains('btn-danger')) {
+        deleteTask(event)
+    }
+})
 
-sortNewButton.addEventListener('click', sortNew);
-sotrOldButton.addEventListener('click', sortOld);
+completedList.addEventListener('click', (event) => {
+    if (event.target.classList.contains('btn-danger')) {
+        deleteTask(event.target.closest('li'));
+    }
+}); 
+
+form.addEventListener('submit', (event) => {
+    
+    if (submitButton.textContent === "Add task") {
+        submitFormAdd(event);
+    }
+
+    if (submitButton.textContent === "Edit task") {
+        submitFormEdit(event);
+    }
+});
+
+sortNewButton.addEventListener('click', (event) => {
+    sortTasks(false);
+});
+
+sotrOldButton.addEventListener('click', (event) => {
+    sortTasks(true);
+});
+
 nightButton.addEventListener('click', activateNightMode);
 
 function completeTask(event) {
 
-    if (event.target.classList.contains('btn-success')) {
+    const task = event.target.closest('li');
 
-        let task = event.target.closest('li');
+    task.querySelector('.btn-success').remove();
+    task.querySelector('.btn-info').remove();
 
-        task.querySelector('.btn-success').style.display = 'none';
-        task.querySelector('.btn-info').style.display = 'none';
+    todoList.previousElementSibling.innerHTML = "ToDo (" + --taskCounter + ")";
+    completedList.previousElementSibling.innerHTML = "Completed (" + ++completeCounter + ")";
 
-        todoList.previousElementSibling.innerHTML = "ToDo (" + --taskCounter + ")";
-        completedList.previousElementSibling.innerHTML = "Completed (" + ++completeCounter + ")";
+    let taskDescription = JSON.parse(localStorage.getItem(task.dataset.id));
 
-        let taskDescription = JSON.parse(localStorage.getItem(task.dataset.id));
+    taskDescription.isDone = true;
 
-        taskDescription.isDone = true;
+    localStorage.setItem(taskDescription.id, JSON.stringify(taskDescription));
 
-        localStorage.setItem(taskDescription.id, JSON.stringify(taskDescription));
-
-        completedList.append(task);
-    }
+    completedList.append(task);
 }
 
 function editTask(event) {
-    if (event.target.classList.contains('btn-info')) {
 
-        $("#exampleModal").modal("show");
+    const task = event.target.closest('li');
 
-        taskToEdit = event.target.closest('li');
+    $("#exampleModal").modal("show");
 
-        let title = taskToEdit.querySelector('.mb-1').textContent;
-        let text = taskToEdit.querySelector('p').textContent;
-        let priorityItem = taskToEdit.querySelector('small').textContent;
-        let priority = getPriority(priorityItem);
+    taskToEdit = task;
 
-        let color = rgb2hex(taskToEdit.style.backgroundColor);
+    const taskID = task.dataset.id;
 
-        fillEditForm(title, text, priority, color);
+    const taskDescription = JSON.parse(localStorage.getItem(taskID));
 
-        submitButton.textContent = "Edit task";
+    fillEditForm(taskDescription);
 
-        editLabel.textContent = "Edit task";
-        
-    }
+    submitButton.textContent = "Edit task";
+
+    editLabel.textContent = "Edit task";
+
 }
 
-function deleteTask(event) {
+function deleteTask(task) {
 
-    if (event.target.classList.contains('btn-danger')) {
-
-        let task = event.target.closest('li');
-
-        if (event.target.closest('#currentTasks')) {
+        if (task.closest('#currentTasks')) {
             todoList.previousElementSibling.innerHTML = "ToDo (" + --taskCounter + ")";
         } else {
             completedList.previousElementSibling.innerHTML = "Completed (" + --completeCounter + ")";
@@ -94,114 +112,110 @@ function deleteTask(event) {
         localStorage.removeItem(task.dataset.id);
 
         task.remove();
-    }
 }
 
 function submitFormEdit(event) {
 
     event.preventDefault();
-
-    if (submitButton.textContent === "Edit task") {
         
-        let task = taskToEdit;
+    const task = taskToEdit;
 
-        let title = task.querySelector('.mb-1');
-        title.textContent = inputTitle.value;
-    
-        let text = task.querySelector('p');
-        text.textContent = inputText.value;
+    let title = task.querySelector('.mb-1');
+    title.textContent = inputTitle.value;
 
-        let priority = task.querySelector('small');
-        for (item of priorityInputs) {
-            if (item.checked) {
-                priority.textContent = item.value + " priority";
-            }
+    let text = task.querySelector('p');
+    text.textContent = inputText.value;
+
+    let priorityHTML = task.querySelector('small');
+    let priority;
+
+    for (item of priorityInputs) {
+        if (item.checked) {
+            priority = item.value;
+            priorityHTML.textContent = item.value + " priority";
         }
-
-        let time = getDateOfAdd();
-        let timeOfAdd = (new Date()).getTime();
-        task.timeOfAdd = timeOfAdd;
-
-        let dateElement = task.querySelector('.date');
-        dateElement.textContent = time;
-
-        let color = inputColor.value;
-        task.style.backgroundColor = color;
-        let fontColor = getFontColor(inputColor.value);
-        task.style.color = fontColor;
-
-        taskDescription = {
-            "id": task.dataset.id,
-            "title": title.textContent,
-            "text": text.textContent,
-            "priority": priority.textContent,
-            "color": color,
-            "time": time,
-            "timeOfAdd": timeOfAdd,
-            "fontColor": fontColor
-        }
-
-        localStorage.setItem(task.dataset.id, JSON.stringify(taskDescription));
-
-        setInputsToEmpty();
-
-        $("#exampleModal").modal("hide");
-
     }
+
+    let time = getDateOfAdd();
+    let timeOfAdd = (new Date()).getTime();
+    task.timeOfAdd = timeOfAdd;
+
+    let dateElement = task.querySelector('.date');
+    dateElement.textContent = time;
+
+    let color = inputColor.value;
+    task.style.backgroundColor = color;
+    let fontColor = getFontColor(inputColor.value);
+    task.style.color = fontColor;
+
+    taskDescription = {
+        "id": task.dataset.id,
+        "title": title.textContent,
+        "text": text.textContent,
+        "priority": priority,
+        "color": color,
+        "time": time,
+        "timeOfAdd": timeOfAdd,
+        "fontColor": fontColor
+    }
+
+    localStorage.setItem(task.dataset.id, JSON.stringify(taskDescription));
+
+    form.reset();
+
+    submitButton.textContent = "Add task";
+
+    editLabel.textContent = "Add task";
+
+    $("#exampleModal").modal("hide");
+
 }
 
 function submitFormAdd(event) {
 
     event.preventDefault();
 
-    if (submitButton.textContent == "Add task") {
+    todoList.previousElementSibling.innerHTML = "ToDo (" + ++taskCounter + ")";
 
-        todoList.previousElementSibling.innerHTML = "ToDo (" + ++taskCounter + ")";
+    const title = inputTitle.value;
+    const text = inputText.value;
+    let priority;
 
-        let title = inputTitle.value;
-        let text = inputText.value;
-        let priority;
-
-        for (item of priorityInputs) {
-            if (item.checked) {
-                priority = item.value;
-            }
+    priorityInputs.forEach(item => {
+        if (item.checked) {
+            priority = item.value;
         }
-        
-        let time = getDateOfAdd();
-        let timeOfAdd = (new Date()).getTime();
+    })
+    
+    const time = getDateOfAdd();
+    const timeOfAdd = (new Date()).getTime();
 
-        let taskID = generateId();
+    const taskID = generateId();
 
-        let color = inputColor.value;
-        let fontColor = getFontColor(color);
+    const color = inputColor.value;
+    const fontColor = getFontColor(color);
 
-        let taskHTML = createTaskHTML(taskID, title, text, priority, time, timeOfAdd, color, fontColor);
-
-        setInputsToEmpty();
-
-        todoList.insertAdjacentHTML('beforeend', taskHTML);
-
-        taskDescription = {
-            "id": taskID,
-            "isDone": false,
-            "title": title,
-            "text": text,
-            "priority": priority,
-            "color": color,
-            "time": time,
-            "timeOfAdd": timeOfAdd,
-            "fontColor": fontColor
-        }
-
-        localStorage.setItem(taskID, JSON.stringify(taskDescription));
-
-        $("#exampleModal").modal("hide");
+    const taskDescription = {
+        "id": taskID,
+        "isDone": false,
+        "title": title,
+        "text": text,
+        "priority": priority,
+        "color": color,
+        "time": time,
+        "timeOfAdd": timeOfAdd,
+        "fontColor": fontColor
     }
 
-    submitButton.textContent = "Add task";
+    localStorage.setItem(taskID, JSON.stringify(taskDescription));
 
-    editLabel.textContent = "Add task";
+    const taskHTML = createTaskHTML(taskDescription);
+
+    todoList.insertAdjacentHTML('beforeend', taskHTML);
+
+    form.reset();
+
+    $("#exampleModal").modal("hide");
 
 }
 
@@ -209,85 +223,70 @@ function getTasks() {
 
     let keys = Object.keys(localStorage);
 
-    for (let key of keys) {
+    let todoHTML = "";
+    let completedHTML = "";
 
+    keys.forEach(key => {
         if (key.startsWith('_')) {
-            
-            let taskDescription = JSON.parse(localStorage[key]);
 
-            let taskID = taskDescription.id;
-            let title = taskDescription.title;
-            let text = taskDescription.text;
-            let priority = taskDescription.priority;
-            let color = taskDescription.color;
-            let time = taskDescription.time;
-            let timeOfAdd = taskDescription.timeOfAdd;
-            let fontColor = taskDescription.fontColor;
+            const task = localStorage.getItem(key);
 
-            let taskHTML = createTaskHTML(taskID, title, text, priority, time, timeOfAdd, color, fontColor);
-            let task = createElementFromHTML(taskHTML);
-
-            task.querySelector('.dropdown').classList.remove('show');
-            task.querySelector('.dropdown-menu').classList.remove('show');
+            const taskDescription = JSON.parse(task);
 
             if (taskDescription.isDone) {
-                task.querySelector('.btn-success').style.display = 'none';
-                task.querySelector('.btn-info').style.display = 'none';
-
-                completedList.append(task);
+                completedHTML += createTaskHTML(taskDescription);
             } else {
-                todoList.append(task);
+                todoHTML += createTaskHTML(taskDescription);
             }
         }
-        
-    }
+    });
+
+    todoList.insertAdjacentHTML('beforeend', todoHTML);
+    completedList.insertAdjacentHTML('beforeend', completedHTML);
+
+    //task.querySelector('.dropdown').classList.remove('show');
+    //task.querySelector('.dropdown-menu').classList.remove('show');
+
+    sortTasks(false);
 }
 
-function createElementFromHTML(html) {
+function sortTasks(old) {
 
-    let div = document.createElement('div');
+    const tasksToDo = Array.from(todoList.querySelectorAll('li'));
+    const tasksComplete = Array.from(completedList.querySelectorAll('li'));
+
+    let todoHTML = "";
+    let completeHTML = "";
+
+    if (old) {
+        tasksToDo.sort((a, b) => a.dataset.time - b.dataset.time);
+        tasksComplete.sort((a, b) => a.dataset.time - b.dataset.time);
+    } else {
+        tasksToDo.sort((a, b) => b.dataset.time - a.dataset.time);
+        tasksComplete.sort((a, b) => b.dataset.time - a.dataset.time);
+    }
+
+    tasksToDo.forEach(item => {
+        let description = localStorage.getItem(item.dataset.id);
+        todoHTML += createTaskHTML(description);
+    });
+
+    tasksComplete.forEach(item => {
+        let description = localStorage.getItem(item.dataset.id);
+        completeHTML += createTaskHTML(description);
+    });
+
+    todoList.innerHTML = "";
+    completedList.innerHTML = "";
+
+    todoList.insertAdjacentHTML('beforeend', todoHTML);
+    completedList.insertAdjacentHTML('beforeend', completeHTML);
+} 
+
+
+function activateNightMode() {
     
-    div.innerHTML = html.trim();
- 
-    return div.firstChild;
-}
-
-function sortNew(event) {
-    let tasksToDo = Array.from(todoList.querySelectorAll('li'));
-    let tasksComplete = Array.from(completedList.querySelectorAll('li'));
-
-    tasksToDo.sort((a, b) => b.dataset.time - a.dataset.time);
-    tasksComplete.sort((a, b) => b.dataset.time - a.dataset.time);
-
-    for (let task of tasksToDo) {
-        todoList.append(task);
-    }
-
-    for (let task of tasksComplete) {
-        completedList.append(task);
-    }
-}
-
-function sortOld(event) {
-
-    let tasksToDo = Array.from(todoList.querySelectorAll('li'));
-    let tasksComplete = Array.from(completedList.querySelectorAll('li'));
-
-    tasksToDo.sort((a, b) => a.dataset.time - b.dataset.time);
-    tasksComplete.sort((a, b) => a.dataset.time - b.dataset.time);
-
-    for (let task of tasksToDo) {
-        todoList.append(task);
-    }
-
-    for (let task of tasksComplete) {
-        completedList.append(task);
-    }
-}
-
-function activateNightMode(event) {
-    
-    if (nightButton.textContent == "On") {
+    if (nightButton.textContent === "On") {
         nightButton.textContent = "Off";
         sessionStorage.setItem('night', 'true');
     } else {
@@ -299,6 +298,7 @@ function activateNightMode(event) {
     document.querySelectorAll('ul').forEach(item => {
         item.classList.toggle('night-ul');
     });
+
     document.querySelector('.modal').classList.toggle('night-modal');
     document.querySelector('.navbar').classList.toggle('bg-light');
     document.querySelector('.navbar').classList.toggle('night-nav');
@@ -332,9 +332,11 @@ function getDateOfAdd() {
     return time;
 }
 
-function createTaskHTML(taskID, title, text, priority, time, timeOfAdd, color, fontColor) {
+function createTaskHTML(description) {
 
-    let taskHTML = `<li class="list-group-item d-flex w-100 mb-2" data-id ="${taskID}" data-time="${timeOfAdd}" style="background-color:${color}; color: ${fontColor}">
+    const { id, isDone, title, text, priority, time, timeOfAdd, color, fontColor } = description;
+
+    let taskHTML = `<li class="list-group-item d-flex w-100 mb-2" data-is-done="${isDone}" data-id="${id}" data-time="${timeOfAdd}" style="background-color:${color}; color: ${fontColor}">
                             <div class="w-100 mr-2">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h5 class="mb-1">${title}</h5>
@@ -361,31 +363,22 @@ function createTaskHTML(taskID, title, text, priority, time, timeOfAdd, color, f
     return taskHTML;
 }
 
-function fillEditForm(title, text, priority, color) {
+function fillEditForm(description) {
+
+    console.log(description);
+
+    const { title, text, priority, color } = description;
 
     inputTitle.value = title;
     inputText.value = text;
 
-    for (item of priorityInputs) {
-
-        if (item.value == priority) {
-            
+    priorityInputs.forEach(item => {
+        if (item.value === priority) {
             item.checked = true;
         }
-    }
+    });
 
     inputColor.value = color;
-}
-
-function setInputsToEmpty() {
-
-    inputTitle.value = '';
-    inputText.value = '';
-    inputColor.value = "#ffffff";
-    
-    for (item of priorityInputs) {
-        item.checked = false;
-    }
 }
 
  function generateId() {
@@ -400,26 +393,3 @@ function getFontColor(color) {
         return "#000000";
     }
 }
-
-function getPriority(string) {
-    let priority = "";
-
-    for (let char of string) {
-        if (char == " ") {
-            break
-        } else {
-            priority += char;
-        }
-    }
-
-    return priority;
-}
-
-function rgb2hex(rgb) {
-    var rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
-
-    return (rgb && rgb.length === 4) ? "#" +
-        ("0" + parseInt(rgb[1],10).toString(16)).slice(-2) +
-        ("0" + parseInt(rgb[2],10).toString(16)).slice(-2) +
-        ("0" + parseInt(rgb[3],10).toString(16)).slice(-2) : '';
-};
