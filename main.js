@@ -37,7 +37,7 @@ todoList.addEventListener('click', (event) => {
 
 completedList.addEventListener('click', (event) => {
     if (event.target.classList.contains('btn-danger')) {
-        deleteTask(event.target.closest('li'));
+        deleteTask(event);
     }
 }); 
 
@@ -66,9 +66,6 @@ function completeTask(event) {
 
     const task = event.target.closest('li');
 
-    task.querySelector('.btn-success').remove();
-    task.querySelector('.btn-info').remove();
-
     todoList.previousElementSibling.innerHTML = "ToDo (" + --taskCounter + ")";
     completedList.previousElementSibling.innerHTML = "Completed (" + ++completeCounter + ")";
 
@@ -78,7 +75,11 @@ function completeTask(event) {
 
     localStorage.setItem(taskDescription.id, JSON.stringify(taskDescription));
 
-    completedList.append(task);
+    task.remove();
+
+    const completedTaskHTML = createTaskHTML(taskDescription);
+
+    completedList.insertAdjacentHTML('beforeend', completedTaskHTML);
 }
 
 function editTask(event) {
@@ -101,17 +102,19 @@ function editTask(event) {
 
 }
 
-function deleteTask(task) {
+function deleteTask(event) {
 
-        if (task.closest('#currentTasks')) {
-            todoList.previousElementSibling.innerHTML = "ToDo (" + --taskCounter + ")";
-        } else {
-            completedList.previousElementSibling.innerHTML = "Completed (" + --completeCounter + ")";
-        }
-        
-        localStorage.removeItem(task.dataset.id);
+    const task = event.target.closest('li');
 
-        task.remove();
+    if (task.closest('#currentTasks')) {
+        todoList.previousElementSibling.innerHTML = "ToDo (" + --taskCounter + ")";
+    } else {
+        completedList.previousElementSibling.innerHTML = "Completed (" + --completeCounter + ")";
+    }
+    
+    localStorage.removeItem(task.dataset.id);
+
+    task.remove();
 }
 
 function submitFormEdit(event) {
@@ -120,35 +123,35 @@ function submitFormEdit(event) {
         
     const task = taskToEdit;
 
-    let title = task.querySelector('.mb-1');
+    const title = task.querySelector('.mb-1');
     title.textContent = inputTitle.value;
 
-    let text = task.querySelector('p');
+    const text = task.querySelector('p');
     text.textContent = inputText.value;
 
     let priorityHTML = task.querySelector('small');
     let priority;
 
-    for (item of priorityInputs) {
+    priorityInputs.forEach(item => {
         if (item.checked) {
             priority = item.value;
             priorityHTML.textContent = item.value + " priority";
         }
-    }
+    })
 
-    let time = getDateOfAdd();
-    let timeOfAdd = (new Date()).getTime();
+    const time = getDateOfAdd();
+    const timeOfAdd = (new Date()).getTime();
     task.timeOfAdd = timeOfAdd;
 
-    let dateElement = task.querySelector('.date');
+    const dateElement = task.querySelector('.date');
     dateElement.textContent = time;
 
-    let color = inputColor.value;
+    const color = inputColor.value;
     task.style.backgroundColor = color;
-    let fontColor = getFontColor(inputColor.value);
+    const fontColor = getFontColor(inputColor.value);
     task.style.color = fontColor;
 
-    taskDescription = {
+    const taskDescription = {
         "id": task.dataset.id,
         "title": title.textContent,
         "text": text.textContent,
@@ -179,21 +182,17 @@ function submitFormAdd(event) {
 
     const title = inputTitle.value;
     const text = inputText.value;
+    const time = getDateOfAdd();
+    const timeOfAdd = (new Date()).getTime();
+    const taskID = generateId();
+    const color = inputColor.value;
+    const fontColor = getFontColor(color);
     let priority;
-
     priorityInputs.forEach(item => {
         if (item.checked) {
             priority = item.value;
         }
     })
-    
-    const time = getDateOfAdd();
-    const timeOfAdd = (new Date()).getTime();
-
-    const taskID = generateId();
-
-    const color = inputColor.value;
-    const fontColor = getFontColor(color);
 
     const taskDescription = {
         "id": taskID,
@@ -221,7 +220,7 @@ function submitFormAdd(event) {
 
 function getTasks() {
 
-    let keys = Object.keys(localStorage);
+    const keys = Object.keys(localStorage);
 
     let todoHTML = "";
     let completedHTML = "";
@@ -244,10 +243,7 @@ function getTasks() {
     todoList.insertAdjacentHTML('beforeend', todoHTML);
     completedList.insertAdjacentHTML('beforeend', completedHTML);
 
-    //task.querySelector('.dropdown').classList.remove('show');
-    //task.querySelector('.dropdown-menu').classList.remove('show');
-
-    sortTasks(false);
+    sortTasks(true);
 }
 
 function sortTasks(old) {
@@ -267,12 +263,12 @@ function sortTasks(old) {
     }
 
     tasksToDo.forEach(item => {
-        let description = localStorage.getItem(item.dataset.id);
+        let description = JSON.parse(localStorage.getItem(item.dataset.id));
         todoHTML += createTaskHTML(description);
     });
 
     tasksComplete.forEach(item => {
-        let description = localStorage.getItem(item.dataset.id);
+        let description = JSON.parse(localStorage.getItem(item.dataset.id));;
         completeHTML += createTaskHTML(description);
     });
 
@@ -336,7 +332,33 @@ function createTaskHTML(description) {
 
     const { id, isDone, title, text, priority, time, timeOfAdd, color, fontColor } = description;
 
-    let taskHTML = `<li class="list-group-item d-flex w-100 mb-2" data-is-done="${isDone}" data-id="${id}" data-time="${timeOfAdd}" style="background-color:${color}; color: ${fontColor}">
+    if (isDone) {
+        let taskHTML = `<li class="list-group-item d-flex w-100 mb-2" data-is-done="${isDone}" data-id="${id}" data-time="${timeOfAdd}" style="background-color:${color}; color: ${fontColor}">
+                            <div class="w-100 mr-2">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">${title}</h5>
+                                    <div>
+                                        <small class="mr-2">${priority} priority</small>
+                                        <small class="date">${time}</small>
+                                    </div>
+
+                                </div>
+                                <p class="mb-1 w-100">${text}</p>
+                            </div>
+                            <div class="dropdown m-2 dropleft">
+                                <button class="btn btn-secondary h-100" type="button" id="dropdownMenuItem1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="dropdown-menu p-2 flex-column" aria-labelledby="dropdownMenuItem1">
+                                    <button type="button" class="btn btn-danger w-100">Delete</button>
+                                </div>
+                            </div>
+                        </li>`
+        
+        return taskHTML;
+        
+    } else {
+        let taskHTML = `<li class="list-group-item d-flex w-100 mb-2" data-is-done="${isDone}" data-id="${id}" data-time="${timeOfAdd}" style="background-color:${color}; color: ${fontColor}">
                             <div class="w-100 mr-2">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h5 class="mb-1">${title}</h5>
@@ -359,13 +381,12 @@ function createTaskHTML(description) {
                                 </div>
                             </div>
                         </li>`
-    
-    return taskHTML;
+        
+        return taskHTML;
+    }
 }
 
 function fillEditForm(description) {
-
-    console.log(description);
 
     const { title, text, priority, color } = description;
 
