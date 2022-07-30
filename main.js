@@ -255,11 +255,11 @@ function sortTasks(old) {
     let completeHTML = "";
 
     if (old) {
-        tasksToDo.sort((a, b) => a.dataset.time - b.dataset.time);
-        tasksComplete.sort((a, b) => a.dataset.time - b.dataset.time);
+        tasksToDo.sort((a, b) => a.dataset.timeOfAdd - b.dataset.timeOfAdd);
+        tasksComplete.sort((a, b) => a.dataset.timeOfAdd - b.dataset.timeOfAdd);
     } else {
-        tasksToDo.sort((a, b) => b.dataset.time - a.dataset.time);
-        tasksComplete.sort((a, b) => b.dataset.time - a.dataset.time);
+        tasksToDo.sort((a, b) => b.dataset.timeOfAdd - a.dataset.timeOfAdd);
+        tasksComplete.sort((a, b) => b.dataset.timeOfAdd - a.dataset.timeOfAdd);
     }
 
     tasksToDo.forEach(item => {
