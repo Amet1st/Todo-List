@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', showCounters);
 document.addEventListener('DOMContentLoaded', getNightMode);
 
 todoList.addEventListener('click', (event) => {
+    
     if (event.target.classList.contains('btn-success')) {
         completeTask(event);
     }
@@ -36,6 +37,7 @@ todoList.addEventListener('click', (event) => {
 })
 
 completedList.addEventListener('click', (event) => {
+
     if (event.target.classList.contains('btn-danger')) {
         deleteTask(event);
     }
