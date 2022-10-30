@@ -6,7 +6,7 @@ Web application about task management
 
 Tech stack: 
 <ul>
-  </li>HTML</li>
-  </li>SCSS</li>
-  </li>JavaSript</li>
+  <li>HTML</li>
+  <li>SCSS</li>
+  <li>JavaSript</li>
 </ul>
